@@ -1,0 +1,5 @@
+{
+  "name": "framehub-verification", "version": "1.0.0", "private": true, "type": "module",
+  "scripts": {"test:ui": "playwright test", "test:e2e": "node scripts/e2e.mjs"},
+  "devDependencies": {"@playwright/test": "1.64.0", "ws": "8.22.0"}
+}

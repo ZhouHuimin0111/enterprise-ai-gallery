@@ -1,0 +1,12 @@
+target/
+.idea/
+*.iml
+.env
+.env.*
+!.env.example
+data/
+*.log
+node_modules/
+test-results/
+playwright-report/
+.DS_Store

@@ -1,0 +1,7 @@
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+RUN useradd --uid 10001 --create-home gallery && mkdir -p /data/objects && chown -R gallery:gallery /app /data
+COPY target/enterprise-ai-gallery-1.0.0.jar /app/app.jar
+USER gallery
+EXPOSE 8081
+ENTRYPOINT ["java","-XX:MaxRAMPercentage=70","-Djava.awt.headless=true","-jar","/app/app.jar"]

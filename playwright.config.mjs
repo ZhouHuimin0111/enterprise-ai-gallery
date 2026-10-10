@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'scripts/ui',timeout:60000,fullyParallel:false,workers:1,retries:0,reporter:[['list'],['html',{open:'never'}]],use:{baseURL:process.env.BASE_URL||'http://localhost:8080',browserName:'chromium',trace:'retain-on-failure',screenshot:'only-on-failure'},projects:[{name:'desktop',use:{viewport:{width:1440,height:1000}}},{name:'mobile',use:{viewport:{width:390,height:844},isMobile:true,hasTouch:true}}]});

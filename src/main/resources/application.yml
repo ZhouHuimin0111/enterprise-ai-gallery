@@ -1,0 +1,67 @@
+server:
+  port: ${SERVER_PORT:8081}
+  shutdown: graceful
+spring:
+  application:
+    name: framehub-gallery
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/framehub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC}
+    username: ${DB_USER:framehub}
+    password: ${DB_PASSWORD:local-demo-password}
+    hikari:
+      maximum-pool-size: 16
+      connection-timeout: 3000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  jackson:
+    time-zone: UTC
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+knife4j:
+  enable: true
+  production: ${HIDE_API_DOCS:false}
+springdoc:
+  api-docs:
+    enabled: ${ENABLE_API_DOCS:true}
+  swagger-ui:
+    enabled: ${ENABLE_API_DOCS:true}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+app:
+  instance-id: ${INSTANCE_ID:local}
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:8080,http://127.0.0.1:8080}
+  bootstrap-admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+  demo-seed: ${DEMO_SEED:false}
+  storage:
+    mode: ${STORAGE_MODE:local}
+    local-path: ${STORAGE_LOCAL_PATH:./data/objects}
+    cos-region: ${COS_REGION:}
+    cos-bucket: ${COS_BUCKET:}
+    cos-secret-id: ${COS_SECRET_ID:}
+    cos-secret-key: ${COS_SECRET_KEY:}
+  ai:
+    mode: ${AI_MODE:demo}
+    base-url: ${DASHSCOPE_BASE_URL:}
+    api-key: ${DASHSCOPE_API_KEY:}
+    model: ${DASHSCOPE_MODEL:wanx2.1-t2i-turbo}
+    result-hosts: ${AI_RESULT_HOSTS:dashscope-result-bj.oss-cn-beijing.aliyuncs.com,dashscope-result-sh.oss-cn-shanghai.aliyuncs.com,dashscope-result-sg.oss-ap-southeast-1.aliyuncs.com}
+    poll-ms: ${AI_POLL_MS:10000}
