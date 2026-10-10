@@ -15,8 +15,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class, jakarta.validation.ConstraintViolationException.class,
         org.springframework.http.converter.HttpMessageNotReadableException.class, org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
         org.springframework.web.bind.MissingServletRequestParameterException.class, org.springframework.web.bind.MissingRequestHeaderException.class,
-        org.springframework.web.multipart.support.MissingServletRequestPartException.class, MaxUploadSizeExceededException.class})
-    ResponseEntity<ApiResponse<Void>> invalid(Exception e) { return ResponseEntity.badRequest().body(ApiResponse.fail(ErrorCode.BAD_REQUEST,"参数不合法；图片上限 10MB，仅接受 PNG/JPEG")); }
+        org.springframework.web.multipart.support.MissingServletRequestPartException.class})
+    ResponseEntity<ApiResponse<Void>> invalid(Exception e) { return ResponseEntity.badRequest().body(ApiResponse.fail(ErrorCode.BAD_REQUEST,"参数不合法，请检查必填项、长度和格式")); }
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiResponse<Void>> oversized(Exception e) { return ResponseEntity.badRequest().body(ApiResponse.fail(ErrorCode.BAD_REQUEST,"上传图片不能超过 10MB")); }
     @ExceptionHandler(DuplicateKeyException.class)
     ResponseEntity<ApiResponse<Void>> duplicate(DuplicateKeyException e) { return ResponseEntity.status(409).body(ApiResponse.fail(ErrorCode.CONFLICT,"记录已存在")); }
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)

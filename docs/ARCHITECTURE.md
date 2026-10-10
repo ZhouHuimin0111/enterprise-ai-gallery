@@ -55,6 +55,8 @@ Pub/Sub 非可靠队列，15 秒 DB 快照修复丢失广播。成员撤销之�
 
 `QUEUED → SUBMITTING → SUBMITTED → SUCCEEDED / FAILED`，同用户 Idempotency-Key 唯一且核对请求体；工作器以 Redis 租约减少重复工作，以 DB 状态 CAS 与行锁保证最终图片关联唯一。
 
+创建任务时锁定用户行，串行核验该用户最多三个进行中任务；Redis 每分钟五次限流另行控制提交频率。两个限制服务于不同目的。
+
 提交前持久化 SUBMITTING。网络超时、崩溃或写 task ID 失败会标为 UNKNOWN（陈旧 SUBMITTING 两分钟后转换），**不盲目重新提交**，避免同一请求多次收费。已知 task ID 的 SUBMITTED 在重启后继续 GET 轮询；生成图片与 job 成功状态同一 DB 事务提交。云任务超过 23 小时结束为失败，防止临时结果过期后无限查询。
 
 Redis worker lock 是降低并发的优化，不承担最终恰好一次保证；租约过期时两个 worker 可同时 GET，但最终事务锁检查 job 状态，只落一张图片。默认 demo provider 无外部收费，结果含明确标记；云模式真实请求需要用户环境变量配置。

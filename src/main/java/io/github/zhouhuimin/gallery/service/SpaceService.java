@@ -15,8 +15,9 @@ import java.util.*;
 @Service @RequiredArgsConstructor
 public class SpaceService {
     private final SpaceMapper spaces;private final MemberMapper members;private final InviteMapper invites;private final AccessService access;
-    private final AuthService auth;private final MaintenanceMapper maintenance;private final AiJobMapper jobs;
+    private final AuthService auth;private final MaintenanceMapper maintenance;private final AiJobMapper jobs;private final UserMapper users;
     @Transactional public Space create(Actor actor,String name,String type) {
+        users.lock(actor.id());
         BusinessException.require(Set.of("PRIVATE","TEAM").contains(type),ErrorCode.BAD_REQUEST);
         BusinessException.require(spaces.selectCount(Wrappers.<Space>lambdaQuery().eq(Space::getOwnerId,actor.id()))<10,ErrorCode.QUOTA_EXCEEDED);
         var s=new Space();s.setName(name.trim());s.setType(type);s.setOwnerId(actor.id());s.setMaxBytes(type.equals("PRIVATE")?104857600L:524288000L);

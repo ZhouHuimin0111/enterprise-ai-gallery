@@ -52,6 +52,7 @@ public class PictureService {
     }
     public Object search(Actor actor,Search s) {
         BusinessException.require(s.page>=1 && s.page<=10000 && s.size>=1 && s.size<=50 && (s.q==null||s.q.length()<=100) && (s.category==null||s.category.length()<=40) && (s.tag==null||s.tag.length()<=30),ErrorCode.BAD_REQUEST);
+        BusinessException.require((s.minWidth==null||s.minWidth>=0&&s.minWidth<=100000)&&(s.minHeight==null||s.minHeight>=0&&s.minHeight<=100000),ErrorCode.BAD_REQUEST);
         var space=access.readSpace(actor,s.spaceId);
         if(s.mine && actor==null) throw new BusinessException(ErrorCode.UNAUTHORIZED);
         boolean cache="PUBLIC".equals(space.getType()) && !s.mine;

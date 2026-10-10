@@ -29,9 +29,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-knife4j:
-  enable: true
-  production: ${HIDE_API_DOCS:false}
 springdoc:
   api-docs:
     enabled: ${ENABLE_API_DOCS:true}
@@ -48,6 +45,7 @@ management:
         enabled: true
 app:
   instance-id: ${INSTANCE_ID:local}
+  hide-api-docs: ${HIDE_API_DOCS:false}
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:8080,http://127.0.0.1:8080}
   bootstrap-admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   demo-seed: ${DEMO_SEED:false}

@@ -10,10 +10,17 @@ import java.util.Arrays;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+    @Value("${app.hide-api-docs}") private boolean hideDocs;
+    @Value("${springdoc.api-docs.enabled}") private boolean enableDocs;
     private final AuthService auth; private final String[] origins;private final String instance;
     public WebConfig(AuthService auth,@Value("${app.allowed-origins}") String origins,@Value("${app.instance-id}") String instance) { this.auth=auth;this.origins=Arrays.stream(origins.split(",")).map(String::trim).toArray(String[]::new);this.instance=instance; }
     @Override public void addCorsMappings(CorsRegistry registry) { registry.addMapping("/api/**").allowedOrigins(origins).allowedMethods("GET","POST","PUT","DELETE","OPTIONS").allowedHeaders("Authorization","Content-Type","Idempotency-Key").maxAge(600); }
     @Override public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new HandlerInterceptor() {
+            @Override public boolean preHandle(HttpServletRequest request,HttpServletResponse response,Object handler) {
+                if(hideDocs || !enableDocs) { response.setStatus(404);return false; }return true;
+            }
+        }).addPathPatterns("/doc.html","/v3/api-docs/**","/swagger-ui/**","/webjars/**");
         registry.addInterceptor(new HandlerInterceptor() {
             @Override public boolean preHandle(HttpServletRequest request,HttpServletResponse response,Object handler) {
                 response.setHeader("X-Content-Type-Options","nosniff");response.setHeader("Cache-Control","no-store");

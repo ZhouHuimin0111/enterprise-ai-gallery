@@ -37,4 +37,4 @@ DEMO_SEED=false
 
 MyBatis X 是 IDE 辅助工具，可选安装用于跳转 Mapper/生成实体，不属于运行时依赖，也不是项目核心业务能力。可以用 Flyway 表结构手动维护实体，不需要该插件才能运行。
 
-接口文档使用适配 Spring Boot 3 的 Knife4j Jakarta starter / springdoc 与 `@Operation`。[官方兼容说明](https://doc.xiaominfo.com/docs/quick-start/start-knife4j-version)。分页使用 MP 的独立 JSQLParser 插件依赖，[官方安装说明](https://baomidou.com/en/getting-started/install/)。
+接口文档使用 Knife4j OpenAPI 3 UI + springdoc 2.9.1 BOM 与 `@Operation`。Knife4j 4.5 starter 的增强层调用旧 `getGroupConfigs()` 签名，与当前 springdoc 不兼容；本项目保留官方 UI，直接加载 springdoc 生成的规范，并自行控制生产文档访问。[Knife4j 官方说明](https://doc.xiaominfo.com/docs/quick-start/start-knife4j-version)、[springdoc 兼容矩阵](https://springdoc.org/v2/)。分页使用 MP 的独立 JSQLParser 插件依赖，[官方安装说明](https://baomidou.com/en/getting-started/install/)。
