@@ -69,16 +69,18 @@ async function navigate(tab,spaceId=null) {
   else if(tab==='admin') { if(state.user.role!=='ADMIN') throw new Error('仅管理员可进行审核');state.space=state.publicSpace;await loadGallery();await renderUserManagement(); }
 }
 $$('[data-nav]').forEach(b=>b.onclick=()=>action(()=>navigate(b.dataset.nav)));
-$('#primary-action').onclick=()=> { if(!requireUser()) return;state.tab==='team'?createSpaceModal('TEAM'):uploadModal(); };
+$('#primary-action').onclick=()=> { if(!requireUser()) return;state.tab==='team'&&state.space?.type!=='TEAM'?createSpaceModal('TEAM'):uploadModal(); };
 $('#secondary-action').onclick=()=>state.tab==='team'?acceptInviteModal():action(()=>navigate('ai'));
 function renderSpacePanel() {
   const s=state.space;$('#space-panel').classList.remove('hidden');
+  if(s.type==='TEAM') $('#primary-action').textContent='＋ 上传图片';
   $('#space-panel').innerHTML=`<div class="panel space-summary"><div><h2>${esc(s.name)} <span class="status">${roles[s.myRole]||s.myRole}</span></h2><p>${s.usedCount} / ${s.maxCount} 张 · ${bytes(s.usedBytes)} / ${bytes(s.maxBytes)}<br>${s.type==='TEAM'?'成员共享素材，编辑使用版本校验并实时同步。':'此空间仅你可见。'}</p></div><div class="space-actions">${s.type==='TEAM'?'<button id="team-members" class="button secondary small">成员与邀请</button><button id="team-back" class="text-button">全部团队</button>':''}<button id="space-analysis" class="button secondary small">查看分析</button>${s.myRole==='OWNER'?'<button id="space-rename" class="text-button">重命名</button><button id="space-delete" class="text-button danger">删除空空间</button>':''}</div></div>`;
   $('#space-analysis').onclick=()=>action(()=>navigate('analytics',s.id));if($('#space-rename')) $('#space-rename').onclick=()=>renameModal();
   if($('#space-delete')) $('#space-delete').onclick=()=>{modal('删除空空间','<p class="hint">仅可删除没有图片及 AI 历史的空间，团队成员和未使用邀请也会移除。</p><button id="confirm-space-delete" class="button danger">确认删除空间</button>');$('#confirm-space-delete').onclick=()=>action(async()=>{await api(`/api/spaces/${s.id}`,{method:'DELETE'});closeModal();toast('空空间已删除');await navigate(s.type==='TEAM'?'team':'private');});};
   if(s.type==='TEAM') { $('#team-members').onclick=()=>action(()=>membersModal());$('#team-back').onclick=()=>action(()=>navigate('team')); }
 }
 function renderTeams() {
+  state.space=null;$('#primary-action').textContent='＋ 创建团队空间';
   $('#gallery-section').classList.add('hidden');$('#extra-section').classList.remove('hidden');const teams=state.spaces.filter(s=>s.type==='TEAM');
   $('#extra-section').innerHTML=`<div class="section-heading"><h2>我的团队空间</h2><span class="muted">${teams.length} 个团队</span></div><div class="space-grid">${teams.map(s=>`<article class="space-card"><p class="eyebrow">SHARED WORKSPACE</p><h3>${esc(s.name)}</h3><span class="status">${roles[s.my_role]}</span><p>${s.used_count} 张素材 · ${bytes(s.used_bytes)} / ${bytes(s.max_bytes)}</p><button class="button secondary small enter-team" data-id="${s.id}">进入空间 ↗</button></article>`).join('')||'<div class="empty-state"><strong>让团队拥有共同的素材库</strong>创建团队，或输入邀请代码加入已有空间。</div>'}</div>`;
   $$('.enter-team').forEach(b=>b.onclick=()=>action(()=>navigate('team',Number(b.dataset.id))));
