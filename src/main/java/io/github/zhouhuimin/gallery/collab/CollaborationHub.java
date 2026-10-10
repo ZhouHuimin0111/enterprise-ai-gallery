@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component @RequiredArgsConstructor
 public class CollaborationHub extends TextWebSocketHandler implements MessageListener {
-    private final AccessService access;private final PictureService pictures;private final UserMapper users;private final Jsons json;
+    private final AccessService access;private final PictureService pictures;private final UserMapper users;private final Jsons json;private final AuthService auth;
     private final ConcurrentHashMap<String,WebSocketSession> sessions=new ConcurrentHashMap<>();
     @Override public void afterConnectionEstablished(WebSocketSession original) throws Exception {
         if(sessions.size()>=500) { original.close(CloseStatus.POLICY_VIOLATION);return; }
@@ -22,7 +22,7 @@ public class CollaborationHub extends TextWebSocketHandler implements MessageLis
     }
     private void snapshot(WebSocketSession session,String type) {
         try {
-            var user=users.selectById((Long)session.getAttributes().get("userId"));var actor=AuthService.actor(user);
+            var actor=auth.authenticateHash((String)session.getAttributes().get("sessionHash"));BusinessException.require(actor!=null,ErrorCode.UNAUTHORIZED);
             var p=access.readPicture(actor,(Long)session.getAttributes().get("pictureId"));
             var message=java.util.Map.of("type",type,"picture",pictures.view(p));session.sendMessage(new TextMessage(json.write(message)));
         } catch(Exception e) { sessions.remove(session.getId());try { session.close(CloseStatus.POLICY_VIOLATION); } catch(Exception ignored) {} }

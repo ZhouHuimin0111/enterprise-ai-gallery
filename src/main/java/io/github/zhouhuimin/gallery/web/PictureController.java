@@ -35,7 +35,8 @@ public class PictureController {
     ApiResponse<Map<String,Object>> upload(@RequestParam MultipartFile file,@RequestParam long spaceId,@RequestParam String title,
         @RequestParam(defaultValue="") String category,@RequestParam(defaultValue="[]") String tags,HttpServletRequest req) throws java.io.IOException {
         var actor=Actor.require(req);auth.rateLimit("upload",Long.toString(actor.id()),30);
-        var parsed=json.read(tags);BusinessException.require(parsed.isArray() && parsed.size()<=10,ErrorCode.BAD_REQUEST);var list=new ArrayList<String>();
+        com.fasterxml.jackson.databind.JsonNode parsed;try { parsed=json.read(tags); }catch(Exception e){throw new BusinessException(ErrorCode.BAD_REQUEST);}
+        BusinessException.require(parsed.isArray() && parsed.size()<=10,ErrorCode.BAD_REQUEST);var list=new ArrayList<String>();
         for(var node:parsed) { BusinessException.require(node.isTextual(),ErrorCode.BAD_REQUEST);list.add(node.asText()); }
         return ApiResponse.ok(service.view(service.upload(actor,spaceId,file.getBytes(),title,category,list,"UPLOAD")));
     }

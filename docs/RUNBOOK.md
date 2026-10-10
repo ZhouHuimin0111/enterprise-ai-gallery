@@ -22,7 +22,7 @@ docker compose start
 
 ## 配置与首次管理员
 
-只在首次创建 admin 时使用 BOOTSTRAP_ADMIN_PASSWORD。修改环境变量不能给已存在的管理员改密码。当前 UI 不提供密码重置；忘记密码需经可信数据库维护流程生成新 BCrypt hash，不要明文入库。
+只在首次创建 admin 时使用 BOOTSTRAP_ADMIN_PASSWORD。修改环境变量不能给已存在的管理员改密码。登录后账号设置可核对旧密码改密；不提供忘记密码重置。忘记密码需经可信数据库维护流程生成新 BCrypt hash 并递增 auth_version，不要明文入库。
 
 正式部署：替换所有演示数据库/Redis/管理员密码、DEMO_SEED=false、配置 COS 和百炼、关闭 ENABLE_API_DOCS 并设置 HIDE_API_DOCS=true、限制 ALLOWED_ORIGINS、使用 HTTPS 反代。修改 nginx CSP 的 connect-src 以匹配实际域名的 wss。开发 CORS 不使用 `*` 或 cookie 跨域凭证。
 

@@ -139,6 +139,21 @@ class CoreWorkflowIT {
         mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
         mvc.perform(post("/api/auth/register").contentType("application/json").content("{\"username\":\"x\",\"password\":\"1\",\"displayName\":\"x\"}"))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("BAD_REQUEST"));
-        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk()).andExpect(jsonPath("$.openapi").value(org.hamcrest.Matchers.startsWith("3.")));
+        var result=mvc.perform(get("/v3/api-docs")).andReturn();assertThat(result.getResolvedException()).isNull();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);assertThat(json.read(result.getResponse().getContentAsString()).path("openapi").asText()).startsWith("3.");
+    }
+    @Test void passwordChangeInvalidatesAllOldSessions() {
+        var owner=user();String first=(String)auth.login(owner.username(),"TestUser2026!").get("token"),second=(String)auth.login(owner.username(),"TestUser2026!").get("token");
+        auth.changePassword(owner,"TestUser2026!","NextPassword2026!");assertThat(auth.authenticate(first)).isNull();assertThat(auth.authenticate(second)).isNull();
+        assertThatThrownBy(()->auth.login(owner.username(),"TestUser2026!")).isInstanceOf(BusinessException.class);assertThat(auth.login(owner.username(),"NextPassword2026!")).containsKey("token");
+    }
+    @Test void emptySpaceCanBeDeletedButNonEmptySpaceCannot() {
+        var owner=user();var empty=spaces.create(owner,"空空间","TEAM");spaces.delete(owner,empty.getId());assertThat(spaceMapper.selectById(empty.getId())).isNull();
+        var full=spaces.create(owner,"非空空间","PRIVATE");upload(owner,full.getId());assertThatThrownBy(()->spaces.delete(owner,full.getId())).isInstanceOf(BusinessException.class);assertThat(spaceMapper.selectById(full.getId())).isNotNull();
+    }
+    @Test void suspendedUserLosesSessionAndCannotLogin() throws Exception {
+        var owner=user();String token=(String)auth.login(owner.username(),"TestUser2026!").get("token"),adminToken=(String)auth.login("admin","TestAdmin2026!").get("token");
+        mvc.perform(delete("/api/admin/users/"+owner.id()).header("Authorization","Bearer "+adminToken)).andExpect(status().isOk());
+        assertThat(auth.authenticate(token)).isNull();assertThatThrownBy(()->auth.login(owner.username(),"TestUser2026!")).isInstanceOf(BusinessException.class);
     }
 }

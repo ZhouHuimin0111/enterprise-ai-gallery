@@ -23,7 +23,10 @@ public class AiJobService {
     private final AiProvider provider;private final PictureService pictures;private final ImageProcessor images;private final TransactionTemplate tx;
     private final StringRedisTemplate redis;private final MaintenanceMapper maintenance;
     private static final DefaultRedisScript<Long> UNLOCK=new DefaultRedisScript<>("if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]) end;return 0;",Long.class);
+    @org.springframework.transaction.annotation.Transactional
     public AiJob create(Actor actor,long spaceId,String prompt,String title,String idempotencyKey) {
+        // Serializing creation per user makes the active-job limit independent of concurrent HTTP requests.
+        var lockedUser=users.lock(actor.id());BusinessException.require(lockedUser!=null && Boolean.TRUE.equals(lockedUser.getEnabled()),ErrorCode.FORBIDDEN);
         access.writeSpace(actor,spaceId);
         var existing=jobs.selectOne(Wrappers.<AiJob>lambdaQuery().eq(AiJob::getUserId,actor.id()).eq(AiJob::getIdempotencyKey,idempotencyKey));
         if(existing!=null) { sameRequest(existing,spaceId,prompt,title);return existing; }
@@ -51,7 +54,7 @@ public class AiJobService {
         try {
             var job=jobs.selectById(id);if(job==null) return;
             if(!job.getProvider().equals(provider.mode())) { fail(id,job.getStatus(),"FAILED","PROVIDER_CONFIGURATION_CHANGED");return; }
-            var user=users.selectById(job.getUserId());var actor=AuthService.actor(user);
+            var user=users.selectById(job.getUserId());BusinessException.require(user!=null && Boolean.TRUE.equals(user.getEnabled()),ErrorCode.FORBIDDEN);var actor=AuthService.actor(user);
             if("SUBMITTING".equals(job.getStatus())) {
                 if(job.getUpdatedAt().isBefore(now().minusMinutes(2))) fail(id,"SUBMITTING","UNKNOWN","SUBMISSION_RESULT_UNCERTAIN");return;
             }

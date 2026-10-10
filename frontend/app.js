@@ -23,7 +23,7 @@ async function action(work) { try { return await work(); } catch(e) { toast(e.me
 function modal(title,html) { closeModal();$('#modal-title').textContent=title;$('#modal-body').innerHTML=html;$('#modal').showModal(); }
 function closeModal() { state.socket?.close();state.socket=null;state.edit=null;state.dirty=false;if($('#modal').open) $('#modal').close(); }
 $('#close-modal').addEventListener('click',closeModal);$('#modal').addEventListener('cancel',()=>{state.socket?.close();state.socket=null;});
-function updateUser() { $('#auth-button').textContent=state.user?`${state.user.displayName} · 退出`:'登录 / 注册';$('#admin-nav').classList.toggle('hidden',state.user?.role!=='ADMIN'); }
+function updateUser() { $('#auth-button').textContent=state.user?`${state.user.displayName} · 退出`:'登录 / 注册';$('#admin-nav').classList.toggle('hidden',state.user?.role!=='ADMIN');$('#profile-button').classList.toggle('hidden',!state.user); }
 function requireUser() { if(state.user) return true;authModal();return false; }
 function authModal(register=false) {
   modal(register?'创建你的创作账号':'欢迎回到 FrameHub',`<div class="tabs"><button id="login-tab" class="button ${register?'secondary':''}">登录</button><button id="register-tab" class="button ${register?'':'secondary'}">注册</button></div><form id="auth-form" class="form">${register?'<label>显示名称<input name="displayName" required maxlength="60" placeholder="你希望大家怎么称呼你"></label>':''}<label>用户名<input name="username" required minlength="3" maxlength="32" pattern="[a-zA-Z0-9_]{3,32}" autocomplete="username" placeholder="3–32 位字母、数字或下划线"></label><label>密码<input name="password" type="password" required minlength="8" maxlength="64" autocomplete="${register?'new-password':'current-password'}" placeholder="至少 8 位"></label><p id="auth-error" class="error hidden"></p><button class="button" type="submit">${register?'注册并登录':'登录'}</button><small>账号用于管理私有素材、参与团队与保存创作任务。</small></form>`);
@@ -66,15 +66,16 @@ async function navigate(tab,spaceId=null) {
     else renderTeams();
   } else if(tab==='ai') { await loadSpaces();renderAi(); }
   else if(tab==='analytics') { await loadSpaces();renderAnalytics(spaceId); }
-  else if(tab==='admin') { if(state.user.role!=='ADMIN') throw new Error('仅管理员可进行审核');state.space=state.publicSpace;await loadGallery(); }
+  else if(tab==='admin') { if(state.user.role!=='ADMIN') throw new Error('仅管理员可进行审核');state.space=state.publicSpace;await loadGallery();await renderUserManagement(); }
 }
 $$('[data-nav]').forEach(b=>b.onclick=()=>action(()=>navigate(b.dataset.nav)));
 $('#primary-action').onclick=()=> { if(!requireUser()) return;state.tab==='team'?createSpaceModal('TEAM'):uploadModal(); };
 $('#secondary-action').onclick=()=>state.tab==='team'?acceptInviteModal():action(()=>navigate('ai'));
 function renderSpacePanel() {
   const s=state.space;$('#space-panel').classList.remove('hidden');
-  $('#space-panel').innerHTML=`<div class="panel space-summary"><div><h2>${esc(s.name)} <span class="status">${roles[s.myRole]||s.myRole}</span></h2><p>${s.usedCount} / ${s.maxCount} 张 · ${bytes(s.usedBytes)} / ${bytes(s.maxBytes)}<br>${s.type==='TEAM'?'成员共享素材，编辑使用版本校验并实时同步。':'此空间仅你可见。'}</p></div><div class="space-actions">${s.type==='TEAM'?'<button id="team-members" class="button secondary small">成员与邀请</button><button id="team-back" class="text-button">全部团队</button>':''}<button id="space-analysis" class="button secondary small">查看分析</button><button id="space-rename" class="text-button">重命名</button></div></div>`;
-  $('#space-analysis').onclick=()=>action(()=>navigate('analytics',s.id));$('#space-rename').onclick=()=>renameModal();
+  $('#space-panel').innerHTML=`<div class="panel space-summary"><div><h2>${esc(s.name)} <span class="status">${roles[s.myRole]||s.myRole}</span></h2><p>${s.usedCount} / ${s.maxCount} 张 · ${bytes(s.usedBytes)} / ${bytes(s.maxBytes)}<br>${s.type==='TEAM'?'成员共享素材，编辑使用版本校验并实时同步。':'此空间仅你可见。'}</p></div><div class="space-actions">${s.type==='TEAM'?'<button id="team-members" class="button secondary small">成员与邀请</button><button id="team-back" class="text-button">全部团队</button>':''}<button id="space-analysis" class="button secondary small">查看分析</button>${s.myRole==='OWNER'?'<button id="space-rename" class="text-button">重命名</button><button id="space-delete" class="text-button danger">删除空空间</button>':''}</div></div>`;
+  $('#space-analysis').onclick=()=>action(()=>navigate('analytics',s.id));if($('#space-rename')) $('#space-rename').onclick=()=>renameModal();
+  if($('#space-delete')) $('#space-delete').onclick=()=>{modal('删除空空间','<p class="hint">仅可删除没有图片及 AI 历史的空间，团队成员和未使用邀请也会移除。</p><button id="confirm-space-delete" class="button danger">确认删除空间</button>');$('#confirm-space-delete').onclick=()=>action(async()=>{await api(`/api/spaces/${s.id}`,{method:'DELETE'});closeModal();toast('空空间已删除');await navigate(s.type==='TEAM'?'team':'private');});};
   if(s.type==='TEAM') { $('#team-members').onclick=()=>action(()=>membersModal());$('#team-back').onclick=()=>action(()=>navigate('team')); }
 }
 function renderTeams() {
@@ -144,6 +145,7 @@ async function pictureModal(id) {
   $('#edit-form').addEventListener('input',()=>state.dirty=true);
   $('#edit-form').onsubmit=e=>{e.preventDefault();if(!editable) return;const f=new FormData(e.target);saveEdit(()=>api(`/api/pictures/${id}`,{method:'PUT',body:{title:f.get('title'),category:f.get('category'),tags:String(f.get('tags')).split(',').map(t=>t.trim()).filter(Boolean),version:state.edit.version}}));};
   if(editable) {
+    $('#transform-form').addEventListener('input',()=>state.dirty=true);
     $('#transform-form').onsubmit=e=>{e.preventDefault();const data=Object.fromEntries([...new FormData(e.target)].map(([k,v])=>[k,Number(v)]));saveEdit(()=>api(`/api/pictures/${id}/transform`,{method:'POST',body:{...data,version:state.edit.version}}));};
     $('#delete-picture').onclick=()=> { modal('确认删除素材','<p class="hint">此操作将删除图片记录并释放空间配额。</p><button id="confirm-delete" class="button danger">确认删除</button>');$('#confirm-delete').onclick=()=>action(async()=>{await api(`/api/pictures/${id}?version=${p.version}`,{method:'DELETE'});closeModal();toast('图片已删除');await loadGallery();}); };
   }
@@ -208,3 +210,14 @@ async function init() {
   } catch(error) { $('#gallery').innerHTML=`<div class="empty-state"><strong>暂时无法连接图库</strong>${esc(error.message)}<br>请确认服务已启动后刷新页面。</div>`;$('#mode-label').textContent='图库连接失败'; }
 }
 init();
+$('#profile-button').onclick=()=>{
+  if(!requireUser()) return;modal('账号设置',`<form id="profile-form" class="form"><label>显示名称<input name="displayName" required maxlength="60" value="${esc(state.user.displayName)}"></label><button class="button">更新名称</button></form><h3 class="subheading">修改密码</h3><form id="password-form" class="form"><label>当前密码<input name="oldPassword" type="password" required maxlength="64" autocomplete="current-password"></label><label>新密码<input name="newPassword" type="password" required minlength="8" maxlength="64" autocomplete="new-password"></label><small>修改后所有旧登录会话都会失效，请重新登录。</small><button class="button secondary">修改密码</button></form>`);
+  $('#profile-form').onsubmit=e=>{e.preventDefault();action(async()=>{state.user=await api('/api/users/me',{method:'PUT',body:{displayName:new FormData(e.target).get('displayName')}});updateUser();closeModal();toast('名称已更新');});};
+  $('#password-form').onsubmit=e=>{e.preventDefault();action(async()=>{await api('/api/users/me/password',{method:'POST',body:Object.fromEntries(new FormData(e.target))});state.token=null;state.user=null;sessionStorage.removeItem('framehub-token');updateUser();closeModal();await navigate('public');toast('密码已更新，请重新登录');authModal();});};
+};
+async function renderUserManagement(page=1,q='') {
+  const data=await api(`/api/admin/users?page=${page}&q=${encodeURIComponent(q)}`);$('#extra-section').classList.remove('hidden');
+  $('#extra-section').innerHTML=`<div class="panel"><div class="section-heading"><h2>用户管理</h2><span class="muted">${data.total} 个账号</span></div><form id="user-search" class="filters"><input name="q" maxlength="32" value="${esc(q)}" placeholder="检索用户名"><button class="button small">搜索账号</button></form>${data.records.map(r=>`<div class="member"><span class="name">${esc(r.user.displayName)}<br><small class="muted">${esc(r.user.username)}</small></span><span class="status">${r.user.role==='ADMIN'?'管理员':r.enabled?'正常':'已停用'}</span>${r.user.role==='USER'&&r.user.username!=='system'?`<button class="text-button ${r.enabled?'danger':''} account-toggle" data-id="${r.user.id}" data-enabled="${!r.enabled}">${r.enabled?'停用账号':'启用账号'}</button>`:''}</div>`).join('')}<div class="pagination"><button id="user-previous" class="button secondary small" ${page===1?'disabled':''}>上一页</button><span>${page}</span><button id="user-next" class="button secondary small" ${page*20>=data.total?'disabled':''}>下一页</button></div><p class="hint">停用采用逻辑删除，立即阻止新访问并保留图片与审计关联；不能停用系统管理员。</p></div>`;
+  $('#user-search').onsubmit=e=>{e.preventDefault();action(()=>renderUserManagement(1,new FormData(e.target).get('q')));};$('#user-previous').onclick=()=>action(()=>renderUserManagement(page-1,q));$('#user-next').onclick=()=>action(()=>renderUserManagement(page+1,q));
+  $$('.account-toggle').forEach(b=>b.onclick=()=>action(async()=>{await api(`/api/admin/users/${b.dataset.id}`,{method:'PUT',body:{enabled:b.dataset.enabled==='true'}});toast('账号状态已更新');await renderUserManagement(page,q);}));
+}

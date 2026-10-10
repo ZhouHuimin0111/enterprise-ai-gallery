@@ -33,6 +33,8 @@ public class SpaceController {
     ApiResponse<Object> detail(@PathVariable long id,HttpServletRequest req) { var a=Actor.optional(req);var s=access.readSpace(a,id);return ApiResponse.ok(Map.of("space",s,"myRole",access.role(a,s))); }
     @Operation(summary="空间所有者重命名") @PutMapping("/{id}")
     ApiResponse<Void> rename(@PathVariable long id,@Valid @RequestBody Rename b,HttpServletRequest req) { service.rename(Actor.require(req),id,b.name);return ApiResponse.ok(null); }
+    @Operation(summary="所有者删除空空间；保留含图片或 AI 历史的空间") @DeleteMapping("/{id}")
+    ApiResponse<Void> delete(@PathVariable long id,HttpServletRequest req) { service.delete(Actor.require(req),id);return ApiResponse.ok(null); }
     @Operation(summary="团队成员列表") @GetMapping("/{id}/members")
     ApiResponse<Object> members(@PathVariable long id,HttpServletRequest req) { var s=access.readSpace(Actor.require(req),id);BusinessException.require("TEAM".equals(s.getType()),ErrorCode.BAD_REQUEST);return ApiResponse.ok(spaces.members(id)); }
     @Operation(summary="生成一次性 48 小时邀请；只能所有者邀请管理员") @PostMapping("/{id}/invites")

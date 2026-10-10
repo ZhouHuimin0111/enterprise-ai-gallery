@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration @EnableWebSocket @RequiredArgsConstructor
 public class CollaborationConfig implements WebSocketConfigurer {
-    private final CollaborationHub hub;private final StringRedisTemplate redis;private final Jsons json;private final AccessService access;private final UserMapper users;
+    private final CollaborationHub hub;private final StringRedisTemplate redis;private final Jsons json;private final AccessService access;private final UserMapper users;private final AuthService auth;
     @Value("${app.allowed-origins}") private String origins;
     @Override public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(hub,"/ws/collaborate").setAllowedOrigins(origins.split(",")).addInterceptors(new HandshakeInterceptor() {
@@ -31,9 +31,9 @@ public class CollaborationConfig implements WebSocketConfigurer {
                     String value=redis.opsForValue().getAndDelete("ws:ticket:"+cn.hutool.crypto.digest.DigestUtil.sha256Hex(ticket));
                     if(value==null) { response.setStatusCode(HttpStatus.UNAUTHORIZED);return false; }
                     var data=json.read(value);long userId=data.path("userId").asLong(),pictureId=data.path("pictureId").asLong();
-                    var user=users.selectById(userId);var p=access.readPicture(AuthService.actor(user),pictureId);
+                    String sessionHash=data.path("sessionHash").asText();var actor=auth.authenticateHash(sessionHash);BusinessException.require(actor!=null&&actor.id()==userId,ErrorCode.UNAUTHORIZED);var p=access.readPicture(actor,pictureId);
                     BusinessException.require("TEAM".equals(access.space(p.getSpaceId()).getType()),ErrorCode.FORBIDDEN);
-                    attributes.put("userId",userId);attributes.put("pictureId",pictureId);return true;
+                    attributes.put("userId",userId);attributes.put("pictureId",pictureId);attributes.put("sessionHash",sessionHash);return true;
                 } catch(Exception e) { response.setStatusCode(HttpStatus.FORBIDDEN);return false; }
             }
             @Override public void afterHandshake(org.springframework.http.server.ServerHttpRequest request,org.springframework.http.server.ServerHttpResponse response,WebSocketHandler handler,Exception e) {}

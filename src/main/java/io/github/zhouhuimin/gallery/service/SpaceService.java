@@ -15,7 +15,7 @@ import java.util.*;
 @Service @RequiredArgsConstructor
 public class SpaceService {
     private final SpaceMapper spaces;private final MemberMapper members;private final InviteMapper invites;private final AccessService access;
-    private final AuthService auth;private final MaintenanceMapper maintenance;
+    private final AuthService auth;private final MaintenanceMapper maintenance;private final AiJobMapper jobs;
     @Transactional public Space create(Actor actor,String name,String type) {
         BusinessException.require(Set.of("PRIVATE","TEAM").contains(type),ErrorCode.BAD_REQUEST);
         BusinessException.require(spaces.selectCount(Wrappers.<Space>lambdaQuery().eq(Space::getOwnerId,actor.id()))<10,ErrorCode.QUOTA_EXCEEDED);
@@ -51,5 +51,12 @@ public class SpaceService {
     @Transactional public void rename(Actor actor,long id,String name) {
         var s=access.space(id);BusinessException.require(actor!=null && s.getOwnerId()==actor.id() && !"PUBLIC".equals(s.getType()),ErrorCode.FORBIDDEN);
         s.setName(name.trim());spaces.updateById(s);maintenance.audit(actor.id(),id,"SPACE_RENAME",Long.toString(id));
+    }
+    @Transactional public void delete(Actor actor,long id) {
+        var s=spaces.lock(id);BusinessException.require(s!=null,ErrorCode.NOT_FOUND);
+        BusinessException.require(s.getOwnerId()==actor.id() && !"PUBLIC".equals(s.getType()),ErrorCode.FORBIDDEN);
+        BusinessException.require(s.getUsedCount()==0 && jobs.selectCount(Wrappers.<AiJob>lambdaQuery().eq(AiJob::getSpaceId,id))==0,ErrorCode.CONFLICT);
+        invites.delete(Wrappers.<SpaceInvite>lambdaQuery().eq(SpaceInvite::getSpaceId,id));members.delete(Wrappers.<SpaceMember>lambdaQuery().eq(SpaceMember::getSpaceId,id));
+        maintenance.audit(actor.id(),id,"SPACE_DELETE",Long.toString(id));spaces.deleteById(id);
     }
 }

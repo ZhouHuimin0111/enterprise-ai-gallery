@@ -21,6 +21,7 @@ public class AuthService {
     private static final DefaultRedisScript<Long> RATE=new DefaultRedisScript<>("local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],60); end; return n;",Long.class);
     public String randomToken() { byte[] bytes=new byte[32];random.nextBytes(bytes);return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }
     private String key(String token) { return "session:"+DigestUtil.sha256Hex(token); }
+    public String sessionHash(String token) { return DigestUtil.sha256Hex(token); }
     public void rateLimit(String category,String identity,int max) {
         Long n=redis.execute(RATE,List.of("rate:"+category+":"+DigestUtil.sha256Hex(identity)));
         BusinessException.require(n!=null && n<=max,ErrorCode.RATE_LIMITED);
@@ -33,14 +34,26 @@ public class AuthService {
     public Map<String,Object> login(String username,String password) {
         rateLimit("login",username.toLowerCase(Locale.ROOT),10);
         var user=users.selectOne(Wrappers.<User>lambdaQuery().eq(User::getUsername,username));
-        if(user==null || !user.getPasswordHash().startsWith("$2") || !bcrypt.matches(password,user.getPasswordHash())) throw new BusinessException(ErrorCode.UNAUTHORIZED,"用户名或密码错误");
-        String token=randomToken();redis.opsForValue().set(key(token),Long.toString(user.getId()),Duration.ofMinutes(30));
+        if(user==null || !Boolean.TRUE.equals(user.getEnabled()) || !user.getPasswordHash().startsWith("$2") || !bcrypt.matches(password,user.getPasswordHash())) throw new BusinessException(ErrorCode.UNAUTHORIZED,"用户名或密码错误");
+        String token=randomToken();redis.opsForValue().set(key(token),user.getId()+":"+user.getAuthVersion(),Duration.ofMinutes(30));
         return Map.of("token",token,"user",actor(user));
     }
     public Actor authenticate(String token) {
         if(token==null || !token.matches("[A-Za-z0-9_-]{43}")) return null;
-        String id=redis.execute(REFRESH,List.of(key(token))); if(id==null) return null;
-        var user=users.selectById(Long.parseLong(id));return user==null?null:actor(user);
+        return authenticateHash(sessionHash(token));
+    }
+    public Actor authenticateHash(String hash) {
+        if(hash==null || !hash.matches("[a-f0-9]{64}")) return null;
+        String value=redis.execute(REFRESH,List.of("session:"+hash));if(value==null) return null;
+        String[] parts=value.split(":");var user=users.selectById(Long.parseLong(parts[0]));int version=parts.length>1?Integer.parseInt(parts[1]):0;
+        return user==null || !Boolean.TRUE.equals(user.getEnabled()) || user.getAuthVersion()!=version?null:actor(user);
+    }
+    public void changePassword(Actor actor,String oldPassword,String nextPassword) {
+        rateLimit("password",Long.toString(actor.id()),5);var user=users.selectById(actor.id());
+        BusinessException.require(bcrypt.matches(oldPassword,user.getPasswordHash()),ErrorCode.UNAUTHORIZED);
+        int changed=users.update(null,Wrappers.<User>lambdaUpdate().eq(User::getId,actor.id()).eq(User::getAuthVersion,user.getAuthVersion())
+            .set(User::getPasswordHash,bcrypt.encode(nextPassword)).setSql("auth_version=auth_version+1"));
+        BusinessException.require(changed==1,ErrorCode.CONFLICT);
     }
     public void logout(String token) { if(token!=null) redis.delete(key(token)); }
     public static Actor actor(User user) { return new Actor(user.getId(),user.getUsername(),user.getDisplayName(),user.getRole()); }

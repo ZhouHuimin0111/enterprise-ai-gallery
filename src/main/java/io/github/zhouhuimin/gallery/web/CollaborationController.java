@@ -19,7 +19,7 @@ public class CollaborationController {
     ApiResponse<Object> ticket(@Valid @RequestBody Ticket body,HttpServletRequest req) {
         var actor=Actor.require(req);var p=access.readPicture(actor,body.pictureId);BusinessException.require("TEAM".equals(access.space(p.getSpaceId()).getType()),ErrorCode.BAD_REQUEST);
         auth.rateLimit("ws",Long.toString(actor.id()),20);String ticket=auth.randomToken();
-        redis.opsForValue().set("ws:ticket:"+cn.hutool.crypto.digest.DigestUtil.sha256Hex(ticket),json.write(Map.of("userId",actor.id(),"pictureId",p.getId())),Duration.ofSeconds(30));
+        redis.opsForValue().set("ws:ticket:"+cn.hutool.crypto.digest.DigestUtil.sha256Hex(ticket),json.write(Map.of("userId",actor.id(),"pictureId",p.getId(),"sessionHash",auth.sessionHash(req.getHeader("Authorization").substring(7)))),Duration.ofSeconds(30));
         return ApiResponse.ok(Map.of("ticket",ticket,"expiresInSeconds",30,"path","/ws/collaborate"));
     }
 }

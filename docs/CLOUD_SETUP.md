@@ -5,7 +5,7 @@
 ## COS
 
 1. 创建腾讯云 COS **私有读写**桶，记录带 APPID 后缀的桶名及 region。
-2. 使用最小权限 RAM 子账号（腾讯云为 CAM），授予目标桶 `PutObject`、`GetObject`、`DeleteObject`；不需要公共读或浏览器直接持有密钥。
+2. 使用 CAM 最小权限子账号，授予目标桶 `PutObject`、`GetObject`、`DeleteObject`；不需要公共读或浏览器直接持有密钥。
 3. 设置 `STORAGE_MODE=cos`、`COS_REGION`、`COS_BUCKET`、`COS_SECRET_ID`、`COS_SECRET_KEY`，重启两个应用。
 4. 上传、下载、删除测试图片；私有图片不应从匿名 API 或裸桶 URL 读取。对象删除默认延迟 30 分钟，失败后台重试。
 

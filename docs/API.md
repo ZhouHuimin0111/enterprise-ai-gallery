@@ -8,9 +8,12 @@
 | --- | --- |
 | POST `/api/auth/register` / `/login` / `/logout` | 注册、登录、注销 |
 | GET `/api/auth/me` | 当前用户 |
+| PUT `/api/users/me` / POST `/api/users/me/password` | 修改名称 / 核对旧密码改密，使旧会话失效 |
+| GET `/api/admin/users` / PUT或DELETE `/api/admin/users/{id}` | 管理员分页查询 / 启停或逻辑删除普通账号 |
 | GET `/api/spaces/public` / `/api/spaces` | 公共空间与模式 / 我的空间 |
 | POST `/api/spaces` | `{name,type:PRIVATE或TEAM}` |
 | GET / PUT `/api/spaces/{id}` | 空间详情 / 所有者重命名 |
+| DELETE `/api/spaces/{id}` | 所有者删除没有图片或 AI 历史的空空间 |
 | GET `/api/spaces/{id}/members` | 团队成员 |
 | POST `/api/spaces/{id}/invites` | `{role:ADMIN/EDITOR/VIEWER}`，返回一次性 token |
 | POST `/api/spaces/accept-invite` | `{token}` 接受邀请 |
