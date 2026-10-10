@@ -43,6 +43,7 @@ jobs:
           mkdir -p test-results
           docker compose logs --no-color > test-results/compose.log 2>&1 || true
           docker compose ps -a > test-results/compose-status.txt 2>&1 || true
+          docker compose ps -aq | xargs -r docker inspect --format '{{.Name}} {{json .State.Health}}' > test-results/healthchecks.txt || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

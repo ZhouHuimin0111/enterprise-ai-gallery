@@ -18,7 +18,7 @@ public class UserController {
     private final UserMapper users;private final AuthService auth;private final MaintenanceMapper maintenance;
     public record Profile(@NotBlank @Size(max=60) String displayName) {}
     public record Password(@NotBlank @Size(max=64) String oldPassword,@NotBlank @Size(min=8,max=64) String newPassword) {}
-    public record Enabled(boolean enabled) {}
+    public record Enabled(@NotNull Boolean enabled) {}
     @Operation(summary="修改自己的显示名称") @PutMapping("/api/users/me")
     ApiResponse<Actor> profile(@Valid @RequestBody Profile b,HttpServletRequest req) {
         var actor=Actor.require(req);users.update(null,Wrappers.<User>lambdaUpdate().eq(User::getId,actor.id()).set(User::getDisplayName,b.displayName.trim()));return ApiResponse.ok(AuthService.actor(users.selectById(actor.id())));
@@ -35,8 +35,10 @@ public class UserController {
         return ApiResponse.ok(Map.of("records",result.getRecords().stream().map(u->Map.of("user",AuthService.actor(u),"enabled",u.getEnabled(),"createdAt",u.getCreatedAt())).toList(),"total",result.getTotal()));
     }
     @Operation(summary="管理员启用/停用普通账号；停用立即使旧会话失效") @PutMapping("/api/admin/users/{id}")
-    ApiResponse<Void> enabled(@PathVariable long id,@RequestBody Enabled b,HttpServletRequest req) { enable(Actor.require(req),id,b.enabled);return ApiResponse.ok(null); }
+    @org.springframework.transaction.annotation.Transactional
+    ApiResponse<Void> enabled(@PathVariable long id,@Valid @RequestBody Enabled b,HttpServletRequest req) { enable(Actor.require(req),id,b.enabled);return ApiResponse.ok(null); }
     @Operation(summary="管理员逻辑删除普通账号（停用），保留图片/审计外键") @DeleteMapping("/api/admin/users/{id}")
+    @org.springframework.transaction.annotation.Transactional
     ApiResponse<Void> delete(@PathVariable long id,HttpServletRequest req) { enable(Actor.require(req),id,false);return ApiResponse.ok(null); }
     private void enable(Actor actor,long id,boolean enabled) {
         BusinessException.require(actor.admin(),ErrorCode.FORBIDDEN);var u=users.selectById(id);BusinessException.require(u!=null,ErrorCode.NOT_FOUND);

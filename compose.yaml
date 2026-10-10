@@ -87,7 +87,7 @@ services:
       api-1: {condition: service_healthy}
       api-2: {condition: service_healthy}
     healthcheck:
-      test: [CMD-SHELL, 'wget -q -O /dev/null http://localhost/healthz']
+      test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1/healthz']
       interval: 5s
       retries: 20
 volumes:

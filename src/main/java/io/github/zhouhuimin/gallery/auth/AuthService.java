@@ -27,7 +27,7 @@ public class AuthService {
         BusinessException.require(n!=null && n<=max,ErrorCode.RATE_LIMITED);
     }
     public User register(String username,String password,String name) {
-        BusinessException.require(!username.equalsIgnoreCase("admin"),ErrorCode.BAD_REQUEST);
+        BusinessException.require(!username.equalsIgnoreCase("admin")&&!username.equalsIgnoreCase("system"),ErrorCode.BAD_REQUEST);
         rateLimit("register",username.toLowerCase(Locale.ROOT),5);
         var user=new User();user.setUsername(username);user.setDisplayName(name.trim());user.setPasswordHash(bcrypt.encode(password));user.setRole("USER");users.insert(user);return user;
     }
