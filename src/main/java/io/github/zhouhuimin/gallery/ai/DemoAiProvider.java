@@ -8,9 +8,17 @@ import java.util.Random;
 
 @Component @ConditionalOnProperty(name="app.ai.mode",havingValue="demo",matchIfMissing=true)
 public class DemoAiProvider implements AiProvider {
+    private final long delayMs;
+    public DemoAiProvider(@org.springframework.beans.factory.annotation.Value("${app.ai.demo-delay-ms:10000}") long delayMs) { this.delayMs=Math.max(0,Math.min(delayMs,600000)); }
     public String mode() { return "demo"; }
-    public String submit(String prompt,String requestId) { return "demo-"+requestId; }
-    public Progress poll(String taskId) { return new Progress("SUCCEEDED",art(taskId.hashCode(),"DEMO / NOT AI GENERATED"),null); }
+    public String submit(String prompt,String requestId) { return "demo-"+System.currentTimeMillis()+"-"+requestId; }
+    public Progress poll(String taskId) {
+        if(taskId.matches("demo-[0-9]{13}-.*")) {
+            long submitted=Long.parseLong(taskId.substring(5,18));
+            if(System.currentTimeMillis()-submitted<delayMs) return new Progress("RUNNING",null,null);
+        }
+        return new Progress("SUCCEEDED",art(taskId.hashCode(),"DEMO / NOT AI GENERATED"),null);
+    }
     public static byte[] art(int seed,String label) {
         int w=960,h=640;var image=new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);var g=image.createGraphics();var random=new Random(seed);
         try {

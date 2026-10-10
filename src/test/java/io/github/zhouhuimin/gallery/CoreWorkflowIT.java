@@ -39,6 +39,7 @@ class CoreWorkflowIT {
         r.add("spring.data.redis.host",REDIS::getHost);r.add("spring.data.redis.port",()->REDIS.getMappedPort(6379));
         r.add("app.storage.local-path",()-> {try{return Files.createTempDirectory("gallery-it-").toString();}catch(Exception e){throw new IllegalStateException(e);}});
         r.add("app.bootstrap-admin-password",()->"TestAdmin2026!");r.add("app.demo-seed",()->false);r.add("app.ai.poll-ms",()->600000);
+        r.add("app.ai.demo-delay-ms",()->0);
     }
     @Autowired AuthService auth;@Autowired SpaceService spaces;@Autowired AccessService access;@Autowired PictureService pictures;@Autowired AiJobService ai;
     @Autowired SpaceMapper spaceMapper;@Autowired PictureMapper pictureMapper;@Autowired AiJobMapper jobMapper;@Autowired UserMapper users;

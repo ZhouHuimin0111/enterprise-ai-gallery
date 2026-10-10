@@ -60,3 +60,5 @@ Pub/Sub 非可靠队列，15 秒 DB 快照修复丢失广播。成员撤销之�
 提交前持久化 SUBMITTING。网络超时、崩溃或写 task ID 失败会标为 UNKNOWN（陈旧 SUBMITTING 两分钟后转换），**不盲目重新提交**，避免同一请求多次收费。已知 task ID 的 SUBMITTED 在重启后继续 GET 轮询；生成图片与 job 成功状态同一 DB 事务提交。云任务超过 23 小时结束为失败，防止临时结果过期后无限查询。
 
 Redis worker lock 是降低并发的优化，不承担最终恰好一次保证；租约过期时两个 worker 可同时 GET，但最终事务锁检查 job 状态，只落一张图片。默认 demo provider 无外部收费，结果含明确标记；云模式真实请求需要用户环境变量配置。
+
+Demo provider 将提交时间编码到自己的 task ID，默认等待 10 秒才返回结果，用于真实体验排队/生成阶段。该状态跨进程可恢复，不依赖 JVM 内存；集成测试可设置 app.ai.demo-delay-ms=0 快速验证事务。恢复脚本在真实 SUBMITTED 阶段停掉两个实例，避免已经完成的任务被误当成恢复证据。
