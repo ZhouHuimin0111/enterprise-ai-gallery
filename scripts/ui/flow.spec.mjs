@@ -1,5 +1,10 @@
 import {test,expect} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
+test('Knife4j loads the generated OpenAPI document',async({page,request},testInfo)=>{
+  const spec=await request.get('/v3/api-docs');expect(spec.ok()).toBe(true);const body=await spec.json();expect(body.openapi).toMatch(/^3\./);expect(body.paths['/api/pictures']).toBeTruthy();
+  await page.goto('/doc.html');await expect(page.locator('body')).toContainText('FrameHub',{timeout:20000});
+  await mkdir('test-results/screenshots',{recursive:true});await page.screenshot({path:`test-results/screenshots/${testInfo.project.name}-api-docs.png`,fullPage:true});
+});
 test('public gallery, registration, private upload, editing, analysis and demo AI task',async({page,request},testInfo)=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');await expect(page.locator('.picture-card').first()).toBeVisible();await expect(page.locator('.picture-card').first().locator('img')).toHaveJSProperty('complete',true);await mkdir('test-results/screenshots',{recursive:true});await page.screenshot({path:`test-results/screenshots/${testInfo.project.name}-public.png`,fullPage:true});

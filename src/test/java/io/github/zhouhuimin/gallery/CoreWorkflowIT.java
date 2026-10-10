@@ -156,4 +156,12 @@ class CoreWorkflowIT {
         mvc.perform(delete("/api/admin/users/"+owner.id()).header("Authorization","Bearer "+adminToken)).andExpect(status().isOk());
         assertThat(auth.authenticate(token)).isNull();assertThatThrownBy(()->auth.login(owner.username(),"TestUser2026!")).isInstanceOf(BusinessException.class);
     }
+    @Test void aiActiveJobLimitRemainsThreeUnderConcurrentRequests() throws Exception {
+        var owner=user();var s=spaces.create(owner,"AI限额","PRIVATE");
+        try(var pool=Executors.newFixedThreadPool(5)) {
+            List<Callable<Integer>> requests=new ArrayList<>();for(int i=0;i<5;i++){int n=i;requests.add(()->{try{ai.create(owner,s.getId(),"prompt "+n,"限额任务","concurrent-"+n);return 1;}catch(BusinessException e){assertThat(e.code).isEqualTo(ErrorCode.RATE_LIMITED);return 0;}});}
+            int accepted=0;for(var f:pool.invokeAll(requests))accepted+=f.get();assertThat(accepted).isEqualTo(3);
+        }
+        assertThat(jobMapper.selectCount(Wrappers.<AiJob>lambdaQuery().eq(AiJob::getUserId,owner.id()))).isEqualTo(3);
+    }
 }
