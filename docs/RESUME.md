@@ -18,6 +18,12 @@ GitHub：https://github.com/ZhouHuimin0111/enterprise-ai-gallery
 - JSON 数组类型处理器、参数化 JSON_CONTAINS、分页上限、排序白名单、成员关联联合索引。
 - 公开 Cache Aside + 30 秒 TTL，私有/团队查询每次先鉴权；全局管理员不天然拥有私有数据访问权。
 
+## 已验证的可选补充
+
+基于 Testcontainers 与 GitHub Actions 通过 30 项后端测试、8 项桌面/手机浏览器测试及双实例 HTTP/WebSocket 链路验证。并发正确性测试中，20 个上传请求在两张容量限制下仅接受 2 个，16 个同版本编辑请求仅 1 个成功；在 SUBMITTED 阶段重启两个应用后，原演示任务继续完成。SQL 核验配额偏差、重复成员及成功任务缺图均为 0。
+
+以上可按简历篇幅选用，属于测试环境结果；详细证据见 [验证记录](VERIFICATION.md)，不应改写为生产 QPS 或线上性能收益。
+
 ## 面试问题
 
 1. 什么数据在 MySQL，什么在 Redis，为什么会话 key 存 Token hash？

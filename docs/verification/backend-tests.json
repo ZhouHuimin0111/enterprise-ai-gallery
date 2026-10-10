@@ -1,0 +1,72 @@
+[
+  {
+    "suite": "io.github.zhouhuimin.gallery.CoreWorkflowIT",
+    "tests": 18,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 46.488,
+    "testCases": [
+      "suspendedUserLosesSessionAndCannotLogin",
+      "jsonTagSearchIsParameterizedAndPaginationBounded",
+      "teamViewerCannotUploadAndRevocationBlocksRead",
+      "aiActiveJobLimitRemainsThreeUnderConcurrentRequests",
+      "httpErrorsAreUniformAndDocsUseOpenApi3",
+      "passwordChangeInvalidatesAllOldSessions",
+      "privatePicturesAreIsolatedEvenFromGlobalAdmin",
+      "emptySpaceCanBeDeletedButNonEmptySpaceCannot",
+      "sharedSessionRefreshAndLogoutAreAtomic",
+      "staleVersionLosesWithoutOverwritingConcurrentEdit",
+      "invitationIsConsumedExactlyOnceUnderRace",
+      "uncertainAiSubmissionNeverAutomaticallyResubmits",
+      "onlyReviewedPublicPicturesAppearAndEditsInvalidateCatalog",
+      "cropAndDeleteMaintainExactQuota",
+      "teamAdministratorCannotPromoteOrRemoveOwner",
+      "batchPermissionFailureLeavesAllRowsAndQuotaUntouched",
+      "atomicQuotaPreventsConcurrentUploadsFromExceedingLimit",
+      "aiIdempotencyAndReplayCreateOnePictureAtomically"
+    ]
+  },
+  {
+    "suite": "io.github.zhouhuimin.gallery.ai.DashScopeAiProviderTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.696,
+    "testCases": [
+      "submitsAsyncTaskWithSingleImage",
+      "reportsProviderFailureWithoutLeakingResponse",
+      "doesNotRetryAmbiguousSubmissionTransportError",
+      "pollsKnownTaskRatherThanSubmittingAgain",
+      "refusesUntrustedGeneratedImageUrl"
+    ]
+  },
+  {
+    "suite": "io.github.zhouhuimin.gallery.storage.CosObjectStoreTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.388,
+    "testCases": [
+      "rejectsPathTraversalBeforeCallingSdk",
+      "writesPrivateBucketObjectWithLengthAndType",
+      "readsAndDeletesWithoutExposingSignedPublicUrl"
+    ]
+  },
+  {
+    "suite": "io.github.zhouhuimin.gallery.storage.ImageProcessorTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.151,
+    "testCases": [
+      "rejectsOversizedPixelsBeforeDecoding",
+      "refusesSvgAndFakeImageBytes",
+      "rejectsOutOfBoundsCropAndUnsupportedRotation",
+      "normalizesAndRotatesExactPixels"
+    ]
+  }
+]

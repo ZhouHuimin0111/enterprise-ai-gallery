@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-10T09:00:30.928Z",
+  "environment": "GitHub Actions / MySQL 8.4 / Redis 7.4 / two API instances / local objects / demo AI",
+  "checks": [
+    "uniform unauthenticated rejection",
+    "same Redis token on both API instances",
+    "private metadata, search and binary content isolation",
+    "public review, approval and edit re-review",
+    "single-use role-scoped invitations",
+    "team viewer cannot upload or edit",
+    "real WebSocket cross-instance metadata synchronization",
+    "CAS rejects stale collaborative edit",
+    "WebSocket ticket cannot be replayed",
+    "member revocation blocks reads and closes existing socket",
+    "durable demo AI task survives both application restarts and idempotent request",
+    "atomic batch metadata and JSON tag search",
+    "actual image crop and rotate",
+    "quota agrees with actual stored image bytes",
+    "logout invalidates shared session"
+  ],
+  "backendInstances": [
+    "api-1",
+    "api-2"
+  ],
+  "aiProvider": "demo (no cloud credentials, no actual model invocation)",
+  "privateSpaceId": 2,
+  "privatePictures": 2,
+  "crossInstanceWebSocket": true,
+  "applicationRestartRecovery": true
+}

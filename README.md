@@ -6,6 +6,10 @@
 
 技术栈：Java 21、Spring Boot 3.5、MyBatis Plus 3.5、MySQL 8.4、Redis 7.4、腾讯云 COS Java SDK、阿里云百炼 HTTP 异步 API、Hutool、Knife4j/OpenAPI 3、WebSocket、Docker Compose、JUnit 5、Testcontainers、Playwright。
 
+![公共图库实际页面](docs/screenshots/desktop-public.png)
+
+[查看桌面与手机截图](docs/screenshots/) · [测试结果与可核验证据](docs/VERIFICATION.md) · [简历描述](docs/RESUME.md)
+
 ## 运行
 
 需要 Docker Engine / Docker Desktop（Linux 容器）和 Docker Compose v2。端口 8080 仅绑定本机。无需云账号即可运行完整演示：
@@ -60,6 +64,8 @@ npm run test:ui
 ```
 
 CI 在隔离 Ubuntu 环境执行真实 MySQL/Redis 并发测试、双实例 HTTP/WebSocket 链路、AI 演示任务双应用重启恢复、独立 SQL 一致性核验、桌面/手机 Chromium 流程，并归档报告与截图。
+
+已通过 30 项后端测试与 8 项浏览器测试，双实例 E2E、任务重启恢复和三项 SQL 一致性检查均通过。具体提交、运行链接和原始输出见[验证记录](docs/VERIFICATION.md)。
 
 `scripts/e2e.mjs` 会创建测试账号、图片和团队，重启应用，适合全新演示或 CI 环境。真实 COS/百炼测试需要个人云凭据；默认测试不会产生云费用。适配器单元测试只能证明请求/处理契约，不能替代真实云联调。
 

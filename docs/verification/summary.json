@@ -1,0 +1,21 @@
+{
+  "verifiedDate": "2026-10-10",
+  "repository": "ZhouHuimin0111/enterprise-ai-gallery",
+  "testedCommit": "fc91694d64c27e1536006abf6a9f64e540bfbc3b",
+  "workflowRunId": 38039738237,
+  "workflowJobId": 114177417798,
+  "workflowUrl": "https://github.com/ZhouHuimin0111/enterprise-ai-gallery/actions/runs/38039738237",
+  "conclusion": "success",
+  "artifactId": 11665351440,
+  "artifactDigest": "sha256:a01dbecc08add7673083a8ab342cdf0e02aeb207157b6a76e7714bb4aaeef77a",
+  "backend": {"unitTests": 12, "integrationTests": 18, "failed": 0, "skipped": 0},
+  "browser": {"passed": 8, "failed": 0, "projects": ["desktop", "mobile"], "engine": "Chromium", "screenshots": 16},
+  "httpAndWebSocket": {"checksPassed": 15, "instances": 2, "crossInstanceWebSocket": true, "unfinishedJobRestartRecovery": true},
+  "sql": {"quotaMismatches": 0, "duplicateMembers": 0, "successfulJobsMissingImage": 0},
+  "storageProvider": "local shared Docker volume",
+  "aiProvider": "demo; no real model invocation",
+  "liveCosValidated": false,
+  "liveDashScopeValidated": false,
+  "environment": "GitHub Actions Ubuntu / Java 21 / MySQL 8.4 / Redis 7.4 / two Spring Boot instances / Nginx",
+  "provenance": "Backend counts extracted from JUnit XML; E2E and SQL output copied unchanged from artifact; browser count verified in job log (8 passed). Summary is an archive index, not a load-test result."
+}
